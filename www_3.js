@@ -17,6 +17,7 @@ http.createServer(async function(req, res){
 	//parsin URL-i
 	let currentURL = url.parse(req.url, true);
 	console.log('Parsituna: ' + currentURL.pathname);
+	const fileExt = path.extname(currentURL.pathname);
 	//console.log('Parsituna: ' + currentURL.port);
 	
 	if(currentURL.pathname === '/'){
@@ -26,8 +27,10 @@ http.createServer(async function(req, res){
 		res.write(pageBanner);
 		res.write(pageBody);
 		res.write('\t<img src="kass.jpg" alt="Kass">\n');
-		res.write('\t<p><a href="/vanasona">Tänane vanasõna</a></p>\n');
-		res.write('\t<p><a href="/minust">Minust</a></p>\n');
+		res.write('\t<ul>\n');
+		res.write('\t\t<li><a href="/vanasona">Tänane vanasõna</a></li>\n');
+		res.write('\t\t<li><a href="/minust">Minust</a></li>\n');
+		res.write('\t</ul>\n');
 		res.write('\n\t<p>Täna on ' + dateET.day() + ', ' + dateET.date(Math.round(Math.random())) + ', kell oli lehe avamise hetkel: ' + dateET.time() +'.</p>');
 		res.write(pageFoot);
 		return res.end();
@@ -40,10 +43,14 @@ http.createServer(async function(req, res){
 		res.write(pageBanner);
 		res.write('\t<h1>Tänane Eesti vanasõna</h1>\n\t<p>Siin näed tänaseks päevaks loositud vanasõna.</p>\n\t<hr>');
 		
-		let vanasonad = await fs.readFile('./txt/vanasonad.txt', 'utf8');
-		let vanasonadeList = vanasonad.split(';');
-		let juhuslik = Math.floor(Math.random() * vanasonadeList.length);
-		res.write('\t<p>' + vanasonadeList[juhuslik] + '</p>\n');
+		try {
+			let vanasonad = await fs.readFile('./txt/vanasonad.txt', 'utf8');
+			let vanasonadeList = vanasonad.split(';');
+			let juhuslik = Math.floor(Math.random() * vanasonadeList.length);
+			res.write('\t<p>' + vanasonadeList[juhuslik] + '</p>\n');
+		} catch (err) {
+			res.write('\t<p>Vanasõna ei õnnestunud laadida.</p>\n');
+		}
 		
 		res.write('\t<p><a href="/">Tagasi avalehele</a></p>\n');
 		res.write(pageFoot);
@@ -62,7 +69,7 @@ http.createServer(async function(req, res){
 		return res.end();
 	}
 	
-	else if (currentURL.pathname.endsWith('.jpg')){
+	else if (fileExt === '.jpg'){
 		let imagePath = path.join(__dirname, 'pic', currentURL.pathname);
 		try {
 			const data = await fs.readFile(imagePath);
