@@ -11,14 +11,6 @@ const pageBanner = '\t<img src="veebiprogrammeerimine_2026_ID.png" alt="bänner"
 const pageBody = '\t<h1>Andrus Rinde, veebiprogrammeerimine</h1>\n\t <p>See leht on loodud veebiprogrammeerimise kursusel <a href="https://www.tlu.ee">Tallinna Ülikoolis</a> ning ei sislda tõsiseltvõetavat sisu!</p>\n\t<p>Esialgu tutvusime lihtsalt HTML keelega, nüüd juba programmeerime.</p>\n\t<hr>';
 const pageFoot = '\n</body>\n</html>';
 
-http.createServer(function(req, res){
-	res.writeHead(200, {"Content-type": "text/html"});
-	//res.write('Veebiserver käivitus!');
-	res.write(pageHead);
-	res.write(pageBody);
-	res.write('\n\t<p>Täna on ' + dateET.day() + ', ' + dateET.date(Math.round(Math.random())) + ', kell oli lehe avamise hetkel: ' + dateET.time() +'.</p>');
-	res.write(pageFoot);
-	return res.end();
 http.createServer(async function(req, res){
 	//vaatan URL-i
 	console.log('Päring: ' + req.url);
@@ -33,6 +25,9 @@ http.createServer(async function(req, res){
 		res.write(pageHead);
 		res.write(pageBanner);
 		res.write(pageBody);
+		res.write('\t<img src="kass.jpg" alt="Kass">\n');
+		res.write('\t<p><a href="/vanasona">Tänane vanasõna</a></p>\n');
+		res.write('\t<p><a href="/minust">Minust</a></p>\n');
 		res.write('\n\t<p>Täna on ' + dateET.day() + ', ' + dateET.date(Math.round(Math.random())) + ', kell oli lehe avamise hetkel: ' + dateET.time() +'.</p>');
 		res.write(pageFoot);
 		return res.end();
@@ -44,8 +39,39 @@ http.createServer(async function(req, res){
 		res.write(pageHead);
 		res.write(pageBanner);
 		res.write('\t<h1>Tänane Eesti vanasõna</h1>\n\t<p>Siin näed tänaseks päevaks loositud vanasõna.</p>\n\t<hr>');
+		
+		let vanasonad = await fs.readFile('./txt/vanasonad.txt', 'utf8');
+		let vanasonadeList = vanasonad.split(';');
+		let juhuslik = Math.floor(Math.random() * vanasonadeList.length);
+		res.write('\t<p>' + vanasonadeList[juhuslik] + '</p>\n');
+		
+		res.write('\t<p><a href="/">Tagasi avalehele</a></p>\n');
 		res.write(pageFoot);
 		return res.end();
+	}
+	
+	else if (currentURL.pathname === '/minust'){
+		res.writeHead(200, {"Content-type": "text/html"});
+		res.write(pageHead);
+		res.write(pageBanner);
+		res.write('\t<h1>Minust</h1>\n');
+		res.write('\t<p>Tulin Tallinna Ülikooli õppima, sest mind huvitab informaatika ja soovin selles valdkonnas rohkem teadmisi saada.</p>\n');
+		res.write('\t<img src="avatar.jpg" alt="Avatar">\n');
+		res.write('\t<p><a href="/">Tagasi avalehele</a></p>\n');
+		res.write(pageFoot);
+		return res.end();
+	}
+	
+	else if (currentURL.pathname.endsWith('.jpg')){
+		let imagePath = path.join(__dirname, 'pic', currentURL.pathname);
+		try {
+			const data = await fs.readFile(imagePath);
+			res.writeHead(200, {"Content-type": "image/jpeg"});
+			return res.end(data);
+		} catch (err) {
+			res.writeHead(404, {"Content-type": "text/plain; charset=utf8"});
+			return res.end('Pilti ei leitud!');
+		}
 	}
 	
 	else if (currentURL.pathname === '/veebiprogrammeerimine_2026_ID.png'){
